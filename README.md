@@ -4,7 +4,7 @@
 
 * Denis Enes (19214, d.enes@g.nsu.ru)
 
-* Arseny Morozov (19215, a.morozov4@g.nsu.ru) *
+* Arseny Morozov (19214, a.morozov4@g.nsu.ru) *
 
 ## Idea
 Memory bandwidth and capacity are known perfomance bottlenecks of modern computer systems. Our goal is to design a hardware module capable of increasing memory capacity and memory bandwidth by dynamically compressing data in main memory fully transparently to user/system-level software.
