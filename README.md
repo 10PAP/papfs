@@ -23,5 +23,10 @@ At the end of the semester: Verilog-written description of a hardware-based comp
 
 May, 31
 
+## Research
+
+A storage place for all collected papers/ideas/stuff: \
+https://hardworkar.notion.site/Compression-AI-7b3e8925086b4e64ae7c036f00b1c7c9
+
 ## Trello
 https://trello.com/b/8sKANJMY/ram-compressor
