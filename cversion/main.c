@@ -68,6 +68,43 @@ void printTree(WaveletTreeNode* root)
     }
 }
   
+unsigned int rank(unsigned int bit, unsigned int i, cvector_vector_type(char) bitmap){
+  unsigned int res = 0;
+  for(int j = 0 ; j <= i ; j++)
+    if(bitmap[j] == bit)
+      res++;
+  return res;
+}
+void* getHuffmanCode(WaveletTreeNode* root, unsigned int i, cvector_vector_type(char) resBits){
+  char bit = root->bitmap[i];
+  unsigned int position = rank(bit, i, root->bitmap) - 1;
+  WaveletTreeNode* next = (!bit)?root->left:root->right;
+  cvector_push_back(resBits, bit);
+  if(next == NULL)
+    return resBits;
+  return getHuffmanCode(next, position, resBits);
+}
+
+char decodeHuffmanCode(cvector_vector_type(char) bits){
+  int size = sizeof(huffCodes) / sizeof(huffCodes[0]);
+  for(unsigned char i = 0 ; i < size ; i++){  
+    int j = 0;
+    char success = 1;
+    char* s = huffCodes[i];
+    if(s == NULL){
+      continue;
+    }
+    for(; *s && j < cvector_size(bits); s++, j++){
+      if(*s - '0' != bits[j]){
+        success = 0;
+        break;
+      }
+    }
+    if(success){
+      return i;
+    }
+  }
+}
 
 int main(){
   FILE * infile = fopen("test_data", "rb");
@@ -75,19 +112,19 @@ int main(){
   fread(buffer, BLOCKSIZE, BYTESWORDSIZE, infile);
   fclose(infile);
 
-  buffer = "alabar_a_la_alabarda";
-
   /*
   int freqs[ALPHABETSIZE] = {0};
   for(int i = 0 ; i < BLOCKSIZE ; i++)
     freqs[buffer[i]]++;
-  */
-  int freqs[] = {3, 9, 2, 1, 3, 2};
 
-  // unsigned char arr[256];
+  unsigned char arr[256];
+  for(int i = 0 ; i < 256 ; i++)
+    arr[i] = i;
+  */
+
+  buffer = "alabar_a_la_alabarda";
   unsigned char arr[] = {'_', 'a', 'b', 'd', 'l', 'r'}; 
-  //for(int i = 0 ; i < 256 ; i++)
-  //  arr[i] = i;
+  int freqs[] = {3, 9, 2, 1, 3, 2};
 
   int size = sizeof(arr) / sizeof(arr[0]);
 
@@ -95,6 +132,15 @@ int main(){
 
   WaveletTreeNode* root = buildWaveletTree(buffer, strlen(buffer));
   printTree(root);
+
+  cvector_vector_type(char) code = NULL;
+  for(unsigned int pos = 0 ; pos < 20 ; pos++){
+    code = getHuffmanCode(root, pos, code);
+    printf("%c", decodeHuffmanCode(code));
+    cvector_free(code);
+    code = NULL;
+  }
+  printf("\n");
 
   return 0;
 }
