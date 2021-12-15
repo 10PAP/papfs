@@ -241,8 +241,8 @@ void printCodes(struct MinHeapNode* root, int arr[],
           huffCodes[root->data][i] = arr[i] + '0';
         huffCodes[root->data][top] = '\0';
 
-        printf("%c: ", root->data);
-        printf("%s\n", huffCodes[root->data]);
+        //printf("%c: ", root->data);
+        //printf("%s\n", huffCodes[root->data]);
     }
 }
   

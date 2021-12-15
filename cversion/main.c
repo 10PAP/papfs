@@ -2,13 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "huffman.h"
+#include <tgmath.h>
 
 #define CVECTOR_LOGARITHMIC_GROWTH
 #include "cvector.h"
 
-#define BYTESWORDSIZE (1)
 #define ALPHABETSIZE (256)
-#define BLOCKSIZE (1024)
 
 char* huffCodes[256]; 
 
@@ -52,20 +51,25 @@ WaveletTreeNode* buildWaveletTree(unsigned char* seq, int l){
   return root;
 }
 
-
-void printTree(WaveletTreeNode* root)
+// returns size of a tree in bits actually
+int printTree(WaveletTreeNode* root)
 {
+    int res = 0;
     for(int i = 0 ; i < cvector_size(root->bitmap) ; i++){
-      printf("%d", root->bitmap[i]);
+      //printf("%d", root->bitmap[i]);
     }
-    printf("\n");
+    res += sizeof(WaveletTreeNode) * 8;
+    res += cvector_size(root->bitmap);
+
+    //printf("\n");
 
     if (root->left != NULL) {
-        printTree(root->left);
+        res += printTree(root->left);
     }
     if (root->right != NULL) {
-        printTree(root->right);
+        res += printTree(root->right);
     }
+    return res;
 }
   
 unsigned int rank(unsigned int bit, unsigned int i, cvector_vector_type(char) bitmap){
@@ -75,6 +79,7 @@ unsigned int rank(unsigned int bit, unsigned int i, cvector_vector_type(char) bi
       res++;
   return res;
 }
+
 void* getHuffmanCode(WaveletTreeNode* root, unsigned int i, cvector_vector_type(char) resBits){
   char bit = root->bitmap[i];
   unsigned int position = rank(bit, i, root->bitmap) - 1;
@@ -106,34 +111,56 @@ char decodeHuffmanCode(cvector_vector_type(char) bits){
   }
 }
 
-int main(){
-  FILE * infile = fopen("test_data", "rb");
-  unsigned char * buffer = (char*)malloc(BLOCKSIZE);
-  fread(buffer, BLOCKSIZE, BYTESWORDSIZE, infile);
+int main(int argc, char** argv){
+  FILE * infile = fopen(argv[1], "rb");
+  printf("test %s\n", argv[1]);
+
+  //fseek(infile, 0L, SEEK_END);
+  int n = 1024 * 1024 * 1024;//ftell(infile);
+  //fseek(infile, 0L, SEEK_SET);
+  printf("file_size: %d\n", n);
+
+  unsigned char * buffer = (char*)malloc(n);
+  fread(buffer, n, 1, infile);
   fclose(infile);
 
-  /*
   int freqs[ALPHABETSIZE] = {0};
-  for(int i = 0 ; i < BLOCKSIZE ; i++)
+  for(int i = 0 ; i < n ; i++)
     freqs[buffer[i]]++;
 
-  unsigned char arr[256];
-  for(int i = 0 ; i < 256 ; i++)
-    arr[i] = i;
-  */
+  int sfreqs = 0;
+  for(int i = 0 ; i < ALPHABETSIZE ; i++)
+    sfreqs += freqs[i];
 
-  buffer = "alabar_a_la_alabarda";
-  unsigned char arr[] = {'_', 'a', 'b', 'd', 'l', 'r'}; 
-  int freqs[] = {3, 9, 2, 1, 3, 2};
+  unsigned char arr[ALPHABETSIZE];
+  for(int i = 0 ; i < ALPHABETSIZE ; i++)
+    arr[i] = i;
+
+  //buffer = "alabar_a_la_alabarda";
+  //unsigned char arr[] = {'_', 'a', 'b', 'd', 'l', 'r'}; 
+  //int freqs[] = {3, 9, 2, 1, 3, 2};
 
   int size = sizeof(arr) / sizeof(arr[0]);
 
   HuffmanCodes(arr, freqs, size);
+  double entropy = 0;
+  for(int i = 0 ; i < ALPHABETSIZE ; i++)
+    if(freqs[i] > 0)
+      entropy += -(freqs[i] / (double)sfreqs) * log2(freqs[i] / (double)sfreqs);
+  printf("Huffman codes constructed successfully, entropy: %f\n", (entropy * n) / 8);
 
-  WaveletTreeNode* root = buildWaveletTree(buffer, strlen(buffer));
-  printTree(root);
+  WaveletTreeNode* root = buildWaveletTree(buffer, n);
+  printf("Wavelet tree constructed successfully\n");
+  int compressed_size = printTree(root);
+  compressed_size += sizeof(huffCodes) * 8;
+  for(int i = 0 ; i < ALPHABETSIZE ; i++)
+    if(huffCodes[i] != NULL)
+      compressed_size += strlen(huffCodes[i]) * 8;
+
+  printf("compressed_size, bytes: %d\n", compressed_size / 8);
 
   cvector_vector_type(char) code = NULL;
+  /*
   for(unsigned int pos = 0 ; pos < 20 ; pos++){
     code = getHuffmanCode(root, pos, code);
     printf("%c", decodeHuffmanCode(code));
@@ -141,6 +168,7 @@ int main(){
     code = NULL;
   }
   printf("\n");
+  */
 
   return 0;
 }
