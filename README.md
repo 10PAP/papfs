@@ -7,7 +7,7 @@
 * Arseny Morozov (19214, a.morozov4@g.nsu.ru) *
 
 ## Idea
-Memory bandwidth and capacity are known perfomance bottlenecks of modern computer systems. Our goal is to design a hardware module capable of increasing memory capacity and memory bandwidth by dynamically compressing data in main memory fully transparently to user/system-level software.
+Disk bandwidth and capacity are extremely important in the modern world of big data. Companies have a lot of information to store and retrieve; the storage must be as efficient as possible both in terms of space and access time. Our goal is to design a FUSE-filesystem capable of increasing disk capacity and bandwidth by dynamically compressing data fully transparently to user/system-level software, exploiting techniques from information theory.
 
 ## Risks
 * Breakthrough in information theory can be difficult to exploit in practice \
@@ -17,7 +17,7 @@ Pos. solution: prefer papers with sufficient (and presented :)) experimental res
 Pos. solution: inspect as many existing projects as we can
 
 ## MVP
-At the end of the semester: Verilog-written description of a hardware-based compressor/decompressor with random-access capabilities
+At the end of the semester: fully-capable filesystem, which can be simply mounted with a few bash commands.
 
 ## First Release
 
