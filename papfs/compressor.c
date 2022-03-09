@@ -1,0 +1,7 @@
+void compress() {
+
+}
+
+void deecompress() {
+
+}
