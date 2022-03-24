@@ -30,3 +30,11 @@ https://hardworkar.notion.site/Compression-AI-7b3e8925086b4e64ae7c036f00b1c7c9
 
 ## Trello
 https://trello.com/b/8sKANJMY/ram-compressor
+
+## Comparison of compressed filesystems
+
+https://docs.google.com/document/d/1MKFYAwhZtXMcGVRh_7T2rZt7SrnE6X2DFMI0qINkqv8/edit?usp=sharing
+
+## Current algorithm description
+
+https://docs.google.com/presentation/d/1h6SCdK_gEW3Fv4t8oNDkIDxI9F7dTqPpFmlhkLNPgqM/edit?usp=sharing
