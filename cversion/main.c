@@ -3,11 +3,13 @@
 #include <string.h>
 #include "huffman.h"
 #include <tgmath.h>
+#include <stdint.h>
+#include <sys/types.h>
 
 #define CVECTOR_LOGARITHMIC_GROWTH
 #include "cvector.h"
 
-#define ALPHABETSIZE (256)
+#define ALPHABETSIZE (6)
 
 char* huffCodes[256]; 
 
@@ -111,34 +113,37 @@ char decodeHuffmanCode(cvector_vector_type(char) bits){
   }
 }
 
+void serializeTree(WaveletTreeNode * root);
+
 int main(int argc, char** argv){
-  FILE * infile = fopen(argv[1], "rb");
+  /*FILE * infile = fopen(argv[1], "rb");
   printf("test %s\n", argv[1]);
 
   //fseek(infile, 0L, SEEK_END);
   int n = 1024 * 1024 * 1024;//ftell(infile);
   //fseek(infile, 0L, SEEK_SET);
-  printf("file_size: %d\n", n);
+  printf("file_size: %d\n", n);*/
 
-  unsigned char * buffer = (char*)malloc(n);
+  /*unsigned char * buffer = (char*)malloc(n);
   fread(buffer, n, 1, infile);
-  fclose(infile);
+  fclose(infile);*/
 
-  int freqs[ALPHABETSIZE] = {0};
+  /*int freqs[ALPHABETSIZE] = {0};
   for(int i = 0 ; i < n ; i++)
-    freqs[buffer[i]]++;
+    freqs[buffer[i]]++;*/
+
+  /*unsigned char arr[ALPHABETSIZE];
+  for(int i = 0 ; i < ALPHABETSIZE ; i++)
+    arr[i] = i;*/
+
+  int n = 20;
+  unsigned char * buffer = "alabar_a_la_alabarda";
+  unsigned char arr[] = {'_', 'a', 'b', 'd', 'l', 'r'}; 
+  int freqs[] = {3, 9, 2, 1, 3, 2};
 
   int sfreqs = 0;
   for(int i = 0 ; i < ALPHABETSIZE ; i++)
     sfreqs += freqs[i];
-
-  unsigned char arr[ALPHABETSIZE];
-  for(int i = 0 ; i < ALPHABETSIZE ; i++)
-    arr[i] = i;
-
-  //buffer = "alabar_a_la_alabarda";
-  //unsigned char arr[] = {'_', 'a', 'b', 'd', 'l', 'r'}; 
-  //int freqs[] = {3, 9, 2, 1, 3, 2};
 
   int size = sizeof(arr) / sizeof(arr[0]);
 
@@ -159,6 +164,8 @@ int main(int argc, char** argv){
 
   printf("compressed_size, bytes: %d\n", compressed_size / 8);
 
+  serializeTree(root);
+
   cvector_vector_type(char) code = NULL;
   /*
   for(unsigned int pos = 0 ; pos < 20 ; pos++){
@@ -171,4 +178,32 @@ int main(int argc, char** argv){
   */
 
   return 0;
+}
+
+typedef struct SerialNode {
+  off_t bitmap;
+  uint8_t children;
+} SerialNode;
+
+int32_t wavelet_tree_size(WaveletTreeNode * node) {
+  int res = 1;
+
+  if (node->left != NULL) {
+    res += wavelet_tree_size(node->left);
+  }
+
+  if (node->right != NULL) {
+    res += wavelet_tree_size(node->right);
+  }
+
+  return res;
+}
+
+void serializeTree(WaveletTreeNode * root) {
+  int size = wavelet_tree_size(root);
+  printf("Nodes count: %d\n", size);
+
+  FILE * output = fopen("data.bin", "wb");
+
+
 }
