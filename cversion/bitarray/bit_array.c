@@ -2969,7 +2969,7 @@ void bit_array_divide(BIT_ARRAY *dividend, BIT_ARRAY *quotient, BIT_ARRAY *divis
 
 // Saves bit array to a file. Returns the number of bytes written
 // number of bytes returned should be 8+(bitarr->num_of_bits+7)/8
-bit_index_t bit_array_save(const BIT_ARRAY* bitarr, FILE* f)
+bit_index_t bit_array_save(const BIT_ARRAY* bitarr, FILE* f, int num_of_bytes_size)
 {
   uint32_t num_of_bytes = roundup_bits2bytes(bitarr->num_of_bits);
   bit_index_t bytes_written = 0;
@@ -2979,7 +2979,7 @@ bit_index_t bit_array_save(const BIT_ARRAY* bitarr, FILE* f)
   {
     // Little endian machine
     // Write 8 bytes to store the number of bits in the array
-    bytes_written += fwrite(&bitarr->num_of_bits, 1, 4, f);
+    bytes_written += fwrite(&bitarr->num_of_bits, 1, num_of_bytes_size, f);
 
     // Write the array
     bytes_written += fwrite(bitarr->words, 1, num_of_bytes, f);
@@ -3023,6 +3023,7 @@ static inline uint64_t le64_to_cpu(const uint8_t *x)
 // Returns 1 on success, 0 on failure
 char bit_array_load(BIT_ARRAY* bitarr, FILE* f)
 {
+  // TODO size is 4 byte integer
   // Read in number of bits, return 0 if we can't read in
   bit_index_t num_bits;
   if(fread(&num_bits, 1, 8, f) != 8) return 0;

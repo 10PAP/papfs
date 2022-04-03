@@ -143,8 +143,6 @@ int main(int argc, char** argv){
   for(int i = 0 ; i < ALPHABETSIZE ; i++)
     arr[i] = i;
 
-  printf("-- DEBUG\n");
-
   /*int n = 20;
   unsigned char * buffer = "alabar_a_la_alabarda";
   unsigned char arr[] = {'_', 'a', 'b', 'd', 'l', 'r'}; 
@@ -155,10 +153,8 @@ int main(int argc, char** argv){
     sfreqs += freqs[i];
 
   int size = sizeof(arr) / sizeof(arr[0]);
-  printf("-- DEBUG\n");
 
   HuffmanCodes(arr, freqs, size);
-  printf("-- DEBUG\n");
   double entropy = 0;
   for(int i = 0 ; i < ALPHABETSIZE ; i++)
     if(freqs[i] > 0)
@@ -242,7 +238,7 @@ uint64_t serializeBitmap(FILE * out, cvector_vector_type(char) bitmap) {
     }
   }
 
-  uint64_t bytes_written = bit_array_save(bitmap_arr, out);
+  uint64_t bytes_written = bit_array_save(bitmap_arr, out, 4); //or 8 for big files
 
   bardestroy(bitmap_arr);
   fseek(out, saved_offset, SEEK_SET);
@@ -282,13 +278,45 @@ void serializeTree(FILE * out, WaveletTreeNode * node) {
   }
 }
 
+off_t serializeHuffmanCodes(FILE * out) {
+  off_t huff_offset = 0;
+  printf("Codes:\n");
+  for (int code = 0; code < ALPHABETSIZE; code++) {
+    if (huffCodes[code] == NULL) {
+      printf("Found null\n");
+      continue;
+    } else {
+      printf("code[%d] len=%ld: %s\n", code, strlen(huffCodes[code]), huffCodes[code]);
+    }
+
+    int code_size = strlen(huffCodes[code]);
+    BIT_ARRAY * barr = barcreate(code_size);
+
+    for (int b = 0; b < code_size; b++) {
+      if (huffCodes[code][b] == '0') {
+        barclr(barr, b);
+      }
+      if (huffCodes[code][b] == '1') {
+        barset(barr, b);
+      }
+    }
+
+    bit_array_save(barr, out, 1);
+    huff_offset += 2;
+
+    bardestroy(barr);
+  }
+  return huff_offset;
+}
+
 void serializeAll(WaveletTreeNode * root) {
   FILE * output = fopen("data.bin", "wb");
 
   // serialize huffman codes
+  bitmap_offset = serializeHuffmanCodes(output);
 
   // serialize wavelet-tree
-  bitmap_offset = sizeof(SerialNode) * wavelet_tree_size(root);
+  bitmap_offset += sizeof(SerialNode) * wavelet_tree_size(root);
   printf("Nodes count: %d\n", wavelet_tree_size(root));
   printf("Bitmap offset: %ld\n", bitmap_offset);
   serializeTree(output, root);

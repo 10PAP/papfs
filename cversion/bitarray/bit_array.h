@@ -510,7 +510,7 @@ void bit_array_divide(BIT_ARRAY *dividend, BIT_ARRAY *quotient, BIT_ARRAY *divis
 
 // Saves bit array to a file
 // returns the number of bytes written
-bit_index_t bit_array_save(const BIT_ARRAY* bitarr, FILE* f);
+bit_index_t bit_array_save(const BIT_ARRAY* bitarr, FILE* f, int num_of_bytes_size);
 
 // Reads bit array from a file. bitarr is resized and filled.
 // Returns 1 on success, 0 on failure
