@@ -131,7 +131,7 @@ void buildMinHeap(struct MinHeap* minHeap)
 }
   
 // A utility function to print an array of size n
-void printArr(int arr[], int n)
+void printArr(int * arr, int n)
 {
     int i;
     for (i = 0; i < n; ++i)
@@ -152,8 +152,8 @@ int isLeaf(struct MinHeapNode* root)
 // equal to size and inserts all character of
 // data[] in min heap. Initially size of
 // min heap is equal to capacity
-struct MinHeap* createAndBuildMinHeap(unsigned char data[],
-                                      int freq[], int size)
+struct MinHeap* createAndBuildMinHeap(unsigned char * data,
+                                      int * freq, int size)
   
 {
   
@@ -169,8 +169,8 @@ struct MinHeap* createAndBuildMinHeap(unsigned char data[],
 }
   
 // The main function that builds Huffman tree
-struct MinHeapNode* buildHuffmanTree(unsigned char data[],
-                                     int freq[], int size)
+struct MinHeapNode* buildHuffmanTree(unsigned char * data,
+                                     int * freq, int size)
   
 {
     struct MinHeapNode *left, *right, *top;
@@ -212,7 +212,7 @@ struct MinHeapNode* buildHuffmanTree(unsigned char data[],
   
 // Prints huffman codes from the root of Huffman Tree.
 // It uses arr[] to store codes
-void printCodes(struct MinHeapNode* root, int arr[],
+void printCodes(struct MinHeapNode* root, int * arr,
                 int top)
   
 {
@@ -248,7 +248,7 @@ void printCodes(struct MinHeapNode* root, int arr[],
   
 // The main function that builds a
 // Huffman Tree and return array of lengths of codes
-void HuffmanCodes(unsigned char data[], int freq[], int size)
+void HuffmanCodes(unsigned char * data, int * freq, int size)
 {
     // Construct Huffman Tree
     struct MinHeapNode* root

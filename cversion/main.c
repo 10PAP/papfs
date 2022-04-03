@@ -8,10 +8,14 @@
 
 #define CVECTOR_LOGARITHMIC_GROWTH
 #include "cvector.h"
+#include "bitarray/bit_array.h"
+#include "bitarray/bar.h"
+#include "alph.h"
 
-#define ALPHABETSIZE (6)
 
-char* huffCodes[256]; 
+typedef char WORD;
+
+char* huffCodes[ALPHABETSIZE]; 
 
 typedef struct WaveletTreeNode {
   cvector_vector_type(char) bitmap;
@@ -113,41 +117,48 @@ char decodeHuffmanCode(cvector_vector_type(char) bits){
   }
 }
 
-void serializeTree(WaveletTreeNode * root);
+void serializeAll(WaveletTreeNode * root);
 
+int freqs[ALPHABETSIZE];
+unsigned char arr[ALPHABETSIZE];
 int main(int argc, char** argv){
-  /*FILE * infile = fopen(argv[1], "rb");
+  FILE * infile = fopen(argv[1], "rb");
   printf("test %s\n", argv[1]);
 
-  //fseek(infile, 0L, SEEK_END);
-  int n = 1024 * 1024 * 1024;//ftell(infile);
-  //fseek(infile, 0L, SEEK_SET);
-  printf("file_size: %d\n", n);*/
+  fseek(infile, 0L, SEEK_END);
+  unsigned long n = ftell(infile);
+  fseek(infile, 0L, SEEK_SET);
+  printf("file_size: %lu\n", n);
 
-  /*unsigned char * buffer = (char*)malloc(n);
+  unsigned char * buffer = (char*) malloc(n);
   fread(buffer, n, 1, infile);
-  fclose(infile);*/
+  fclose(infile);
 
-  /*int freqs[ALPHABETSIZE] = {0};
+  printf("File reading finished\n");
+
+  
   for(int i = 0 ; i < n ; i++)
-    freqs[buffer[i]]++;*/
+    freqs[buffer[i]]++;
 
-  /*unsigned char arr[ALPHABETSIZE];
   for(int i = 0 ; i < ALPHABETSIZE ; i++)
-    arr[i] = i;*/
+    arr[i] = i;
 
-  int n = 20;
+  printf("-- DEBUG\n");
+
+  /*int n = 20;
   unsigned char * buffer = "alabar_a_la_alabarda";
   unsigned char arr[] = {'_', 'a', 'b', 'd', 'l', 'r'}; 
-  int freqs[] = {3, 9, 2, 1, 3, 2};
+  int freqs[] = {3, 9, 2, 1, 3, 2};*/
 
   int sfreqs = 0;
   for(int i = 0 ; i < ALPHABETSIZE ; i++)
     sfreqs += freqs[i];
 
   int size = sizeof(arr) / sizeof(arr[0]);
+  printf("-- DEBUG\n");
 
   HuffmanCodes(arr, freqs, size);
+  printf("-- DEBUG\n");
   double entropy = 0;
   for(int i = 0 ; i < ALPHABETSIZE ; i++)
     if(freqs[i] > 0)
@@ -164,7 +175,7 @@ int main(int argc, char** argv){
 
   printf("compressed_size, bytes: %d\n", compressed_size / 8);
 
-  serializeTree(root);
+  serializeAll(root);
 
   cvector_vector_type(char) code = NULL;
   /*
@@ -180,10 +191,16 @@ int main(int argc, char** argv){
   return 0;
 }
 
+/*
+ *  bitmap - reference to serialized bitmap in the file
+ *  hasChildren - 1 if node has children, 0 otherwise
+ */
+#pragma pack(push, 1)
 typedef struct SerialNode {
-  off_t bitmap;
-  uint8_t children;
+  uint32_t bitmap;
+  uint8_t hasChildren;
 } SerialNode;
+#pragma pack(pop)
 
 int32_t wavelet_tree_size(WaveletTreeNode * node) {
   int res = 1;
@@ -199,11 +216,80 @@ int32_t wavelet_tree_size(WaveletTreeNode * node) {
   return res;
 }
 
-void serializeTree(WaveletTreeNode * root) {
-  int size = wavelet_tree_size(root);
-  printf("Nodes count: %d\n", size);
+/*
+ * current bitmap offset
+ */
+off_t bitmap_offset;
 
+/*
+ * TODO: now I use bitarrays only for serialization. What about using them for
+ * representing bitmaps in ram?
+ */
+uint64_t serializeBitmap(FILE * out, cvector_vector_type(char) bitmap) {
+  off_t saved_offset = ftell(out);
+  fseek(out, bitmap_offset, SEEK_SET);
+
+  // here we construct bitarray and serialize it
+  size_t size = cvector_size(bitmap);
+  BIT_ARRAY * bitmap_arr = barcreate(size);
+
+  // fill bitarray with values from cvector
+  for (int i = 0; i < size; i++) {
+    if (bitmap[i] == 1) {
+      barset(bitmap_arr, i);
+    } else {
+      barclr(bitmap_arr, i);
+    }
+  }
+
+  uint64_t bytes_written = bit_array_save(bitmap_arr, out);
+
+  bardestroy(bitmap_arr);
+  fseek(out, saved_offset, SEEK_SET);
+  return bytes_written;
+}
+
+int debug_counter = 0;
+void serializeTree(FILE * out, WaveletTreeNode * node) {
+  SerialNode sNode;
+
+  //printf("%d node left --> %p\n", debug_counter, node->left);
+  //printf("%d node right --> %p\n", debug_counter, node->right);
+
+  // add info about children
+  sNode.hasChildren = 0;
+  if (node->left != NULL) {
+    sNode.hasChildren |= 0b00000001;
+  }
+  if (node->right != NULL) {
+    sNode.hasChildren |= 0b00000010;
+  }
+
+  // add info about bitmap
+  sNode.bitmap = bitmap_offset;
+  serializeBitmap(out, node->bitmap);
+  bitmap_offset += 4 + roundup_bits2bytes(cvector_size(node->bitmap));
+
+  fwrite(&sNode, sizeof(SerialNode), 1, out);
+
+  if ((sNode.hasChildren & 0b00000001) > 0) {
+    debug_counter++;
+    serializeTree(out, node->left);
+  }
+  if ((sNode.hasChildren & 0b00000010) > 0) {
+    debug_counter++;
+    serializeTree(out, node->right);
+  }
+}
+
+void serializeAll(WaveletTreeNode * root) {
   FILE * output = fopen("data.bin", "wb");
 
+  // serialize huffman codes
 
+  // serialize wavelet-tree
+  bitmap_offset = sizeof(SerialNode) * wavelet_tree_size(root);
+  printf("Nodes count: %d\n", wavelet_tree_size(root));
+  printf("Bitmap offset: %ld\n", bitmap_offset);
+  serializeTree(output, root);
 }

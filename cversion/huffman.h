@@ -1,7 +1,7 @@
-
+#include "alph.h"
 // This constant can be avoided by explicitly
 // calculating height of Huffman Tree
-#define MAX_TREE_HT 100
+#define MAX_TREE_HT ALPHABETSIZE
 extern char * huffCodes[];
 // A Huffman tree node
 struct MinHeapNode {
