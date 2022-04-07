@@ -1,6 +1,8 @@
 #ifndef _FS_OPERS_H_
 #define _FS_OPERS_H_
 
+void getFullPath(char fpath[PATH_MAX], const char *path);
+
 int PAPFS_getattr(const char *path, struct stat *statbuf);
 int PAPFS_mknod(const char *path, mode_t mode, dev_t dev);
 int PAPFS_unlink(const char *path);

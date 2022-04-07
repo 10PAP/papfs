@@ -1,5 +1,5 @@
-all : papfs.o log.o fs_opers.o compressor.o
-	gcc -g -o papfs papfs.o log.o fs_opers.o compressor.o `pkg-config fuse --libs`
+all : papfs.o log.o fs_opers.o compressor.o bit_array.o
+	gcc -g -o papfs papfs.o log.o fs_opers.o compressor.o bit_array.o `pkg-config fuse --libs`
 
 papfs.o : papfs.c log.h params.h fs_opers.h compressor.h
 	gcc -g -Wall `pkg-config fuse --cflags` -c papfs.c
@@ -13,6 +13,9 @@ fs_opers.o : fs_opers.c fs_opers.h params.h
 compressor.o : compressor.c compressor.h params.h
 	gcc -g -Wall `pkg-config fuse --cflags` -c compressor.c
 
+bit_array.o : bitarray/bit_array.c bitarray/bit_array.h
+	gcc -g -Wall `pkg-config fuse --cflags` -c bitarray/bit_array.c
+
 clean:
 	rm -f papfs *.o
 
@@ -21,5 +24,5 @@ test:
 	mkdir test/
 	mkdir test/root
 	mkdir test/mount
-	echo "some test file" > test/root/test.txt
 	cp papfs test/papfs
+	cp data.bin test/root/data.bin

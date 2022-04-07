@@ -1,6 +1,5 @@
 #include "params.h"
 
-#include <fuse.h>
 #include <unistd.h>
 #include <stdlib.h>
 
@@ -8,17 +7,32 @@
 #include "fs_opers.h"
 #include "compressor.h"
 
+int PAPFS_open(const char *path, struct fuse_file_info *fi) {
+    int retstat = 0;
+    int fd;
+    char fpath[PATH_MAX];
+
+    log_print("\nPAPFS_open(path\"%s\", fi=0x%08x)\n", path, fi);
+    getFullPath(fpath, path);
+
+    // open file
+    fd = open(fpath, fi->flags);
+    if (fd < 0)
+        retstat = log_error("PAPFS_open open");
+    fi->fh = fd;
+
+    // get metadata from file
+    load_metadata(fd);
+
+    return retstat;
+}
+
 int PAPFS_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
     size_t retstat;
 
     log_print("\nPAPFS_read(path=\"%s\", buf=0x%08x, size=%d, offset=%lld, fi=0x%08x)\n", path, buf, size, offset, fi);
     
     retstat = pread(fi->fh, buf, size, offset);
-    if (retstat < 0)
-    	retstat = log_error("PAPFS_read read");
-
-    // TODO: DECOMPRESS
-    deecompress();
 
     return (int) retstat;
 }
@@ -28,8 +42,8 @@ int PAPFS_write(const char *path, const char *buf, size_t size, off_t offset, st
     
     log_print("\nPAPFS_write(path=\"%s\", buf=0x%08x, size=%d, offset=%lld, fi=0x%08x)\n",path, buf, size, offset, fi);
 
-    // TODO: COMPRESS
-    compress();
+    // TODO: RANDOM ACCESS WRITE OPERATION
+
 
     retstat = pwrite(fi->fh, buf, size, offset);
     if (retstat < 0){

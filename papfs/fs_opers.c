@@ -13,7 +13,7 @@
 
 // In some calls we need to get full path of file/directory
 // We store root path (path to mount point) in our private data
-static void getFullPath(char fpath[PATH_MAX], const char *path) {
+void getFullPath(char fpath[PATH_MAX], const char *path) {
     strcpy(fpath, PAPFS_DATA->rootdir);
     strncat(fpath, path, PATH_MAX);
     log_print("    getFullPath:  rootdir = \"%s\", path = \"%s\", fpath = \"%s\"\n",
@@ -117,32 +117,6 @@ int PAPFS_utime(const char *path, struct utimbuf *ubuf) {
     retstat = utime(fpath, ubuf);
     if (retstat < 0)
         retstat = log_error("PAPFS_utime utime");
-    return retstat;
-}
-
-int PAPFS_open(const char *path, struct fuse_file_info *fi) {
-    uid_t uid;
-    int retstat = 0;
-    int fd;
-    char fpath[PATH_MAX];
-    struct fuse_context *context;
-
-    context = fuse_get_context();
-    uid = context->uid;
-
-    log_print("\nPAPFS_open(path\"%s\", fi=0x%08x)\n", path, fi);
-    getFullPath(fpath, path);
-
-    if (uid != getuid()) {
-        log_print("\nIllegal operation by user %d on file %s", uid, fpath);
-        retstat = -1;
-        return retstat;
-    }
-
-    fd = open(fpath, fi->flags);
-    if (fd < 0)
-        retstat = log_error("PAPFS_open open");
-    fi->fh = fd;
     return retstat;
 }
 
