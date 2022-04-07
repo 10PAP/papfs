@@ -28,12 +28,21 @@ int PAPFS_open(const char *path, struct fuse_file_info *fi) {
 }
 
 int PAPFS_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
-    size_t retstat;
+    int retstat = 0;
 
     log_print("\nPAPFS_read(path=\"%s\", buf=0x%08x, size=%d, offset=%lld, fi=0x%08x)\n", path, buf, size, offset, fi);
-    
-    retstat = pread(fi->fh, buf, size, offset);
 
+    for (unsigned long i = 0; i < size; i++) {
+        int res = random_access_read_symbol(fi->fh, ((unsigned long) offset) + i);
+        //log_print("DEBUG: readed symbol: %d\n", res);
+        if (res == -1) {
+            break;
+        }
+        buf[i] = (char) res;
+        retstat++;
+    }
+    
+    //retstat = pread(fi->fh, buf, size, offset);
     return (int) retstat;
 }
 

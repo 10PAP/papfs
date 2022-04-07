@@ -12,7 +12,7 @@
 
 int load_metadata(int fd);
 
-void ra_write();
+int random_access_read_symbol(int fd, unsigned long i);
 void ra_read();
 
 #endif

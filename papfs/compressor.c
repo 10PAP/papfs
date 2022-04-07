@@ -82,10 +82,74 @@ int load_metadata(int fd) {
     return 0;
 }
 
-void ra_write() {
-
+unsigned int rank(char bit, unsigned int i, BIT_ARRAY * bitmap){
+    unsigned int res = 0;
+    for(int j = 0 ; j <= i ; j++)
+        if(bit_array_get_bit(bitmap, j) == bit)
+            res++;
+    return res;
 }
 
-void ra_read() {
+int getHuffmanCode(WaveletNode * node, unsigned long i, BIT_ARRAY * resBits, int l){
+    //log_print("BITMAP LEN = %lu, i = %lu\n", barlen(node->bitmap), i);
+    if (i >= barlen(node->bitmap)) {
+        return -1;
+    }
+    char bit = bit_array_get_bit(node->bitmap, i);
+    unsigned int position = rank(bit, i, node->bitmap)-1;
+    WaveletNode * next = (!bit) ? node->left : node->right;
+
+    if (bit == 0) {
+        barclr(resBits, l-1);
+    } else {
+        barset(resBits, l-1);
+    }
+
+    if(next == NULL)
+        return l;
+
+    return getHuffmanCode(next, position, resBits, l+1);
+}
+
+uint8_t decodeHuffmanCode(BIT_ARRAY * bits){
+    for(int i = 0 ; i < ALPHABETSIZE ; i++){
+        char success = 1;
+        BIT_ARRAY * code = PAPFS_DATA->huffCodes[i];
+        if(code == NULL || barlen(bits) != barlen(code)){
+            continue;
+        }
+        for(int j = 0; j < barlen(bits); j++){
+            if(bit_array_get_bit(code, j) != bit_array_get_bit(bits, j)){
+                success = 0;
+                break;
+            }
+        }
+        if(success){
+            return i;
+        }
+    }
+    return 0;
+}
+
+//TODO: fd resolving
+int random_access_read_symbol(int fd, unsigned long i) {
+    BIT_ARRAY * symCode = barcreate(ALPHABETSIZE);
+    int len = getHuffmanCode(PAPFS_DATA->wavelet_root, i, symCode, 1);
+    if (len == -1) {
+        bardestroy(symCode);
+        return -1;
+    }
+    bit_array_resize(symCode, len);
+
+    char *str = (char *) malloc(len + 1);
+    bit_array_to_str(symCode, str);
+    //log_print("Found code: %s\n", symCode);
+
+    uint8_t sym = decodeHuffmanCode(symCode);
+    bardestroy(symCode);
+    return sym;
+}
+
+void ra_write() {
 
 }
