@@ -301,8 +301,7 @@ off_t serializeHuffmanCodes(FILE * out) {
       }
     }
 
-    bit_array_save(barr, out, 1);
-    huff_offset += 2;
+    huff_offset += bit_array_save(barr, out, 1);
 
     bardestroy(barr);
   }
