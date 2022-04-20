@@ -41,7 +41,13 @@ int PAPFS_read(const char *path, char *buf, size_t size, off_t offset, struct fu
         buf[i] = (char) res;
         retstat++;
     }
-    
+    for(char c = 'a' ; c <= 'z' ; c++){
+      log_print("DEBUG: rank(%c, 8) = %d\n", c, getTreeRank(
+                                              PAPFS_DATA->wavelet_root,
+                                              8,
+                                              PAPFS_DATA->huffCodes[c],
+                                              0));
+    }
     //retstat = pread(fi->fh, buf, size, offset);
     return (int) retstat;
 }

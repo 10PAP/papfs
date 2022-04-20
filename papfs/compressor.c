@@ -111,6 +111,20 @@ int getHuffmanCode(WaveletNode * node, unsigned long i, BIT_ARRAY * resBits, int
     return getHuffmanCode(next, position, resBits, l+1);
 }
 
+// rank(a, i) - get amount of 'a's up to i-th position
+uint32_t getTreeRank(WaveletNode * node, unsigned long i, BIT_ARRAY * code, unsigned long current_level){
+    // get i-th bit of code
+    char bit = bit_array_get_bit(code, current_level);
+    if(i == 0)
+      return 0;
+    i = rank(bit, i-1, node->bitmap);
+    WaveletNode * next = (!bit) ? node->left : node->right;
+
+    if(next == NULL)
+        return i;
+    return getTreeRank(next, i, code, current_level + 1); 
+}
+
 uint8_t decodeHuffmanCode(BIT_ARRAY * bits){
     for(int i = 0 ; i < ALPHABETSIZE ; i++){
         char success = 1;
