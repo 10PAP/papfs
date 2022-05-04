@@ -72,7 +72,8 @@ void Arithmetic(double delta, long long len) {
 		}
 		m[i] = left;
 		n += m[i];
-		printf("m[%lld]=%lld   n[%lld]=%lld\n", (i + 1), m[i], (i + 1), n);
+		//printf("m[%lld]=%lld   n[%lld]=%lld\n", (i + 1), m[i], (i + 1), n);
+		printf("m[%lld]=%lld; ", (i), m[i]);
 	}
 	printf("s: %lld\n", m.size());
 	printf("redundancy: %2f\n", redundancy(m));
@@ -105,7 +106,7 @@ void Huffman(double delta, long long len) {
 void calcul(uint8_t CodeFlag, double delta, long long len) {
 	printf("delta: %f\n", delta);
 	printf("len: %lld\n", len + 1);
-	printf("m[1]=1   n[1]=1\n");
+	printf("m[0]=1; ");
 	if (CodeFlag) {
 		Arithmetic(delta, len);
 	} else {
@@ -113,7 +114,7 @@ void calcul(uint8_t CodeFlag, double delta, long long len) {
 	}
 }
 int main() {
-	double delta = 0.08;
-	long long len = 123456;
+	double delta = 0.01;
+	long long len = 256;
 	calcul(1, delta, len - 1);
 }
