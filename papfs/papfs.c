@@ -34,13 +34,14 @@ int PAPFS_read(const char *path, char *buf, size_t size, off_t offset, struct fu
 
     for (unsigned long i = 0; i < size; i++) {
         int res = random_access_read_symbol(fi->fh, ((unsigned long) offset) + i);
-        //log_print("DEBUG: readed symbol: %d\n", res);
         if (res == -1) {
             break;
         }
-        buf[i] = (char) res;
+        buf[i] = PAPFS_DATA->groups[res][getTreeRank(PAPFS_DATA->wavelet_root, i, PAPFS_DATA->huffCodes[res], 0)];
+        log_print("DEBUG: readed symbol: %c\n", buf[i]);
         retstat++;
     }
+    /*
     for(char c = 'a' ; c <= 'z' ; c++){
       log_print("DEBUG: rank(%c, 8) = %d\n", c, getTreeRank(
                                               PAPFS_DATA->wavelet_root,
@@ -48,6 +49,7 @@ int PAPFS_read(const char *path, char *buf, size_t size, off_t offset, struct fu
                                               PAPFS_DATA->huffCodes[c],
                                               0));
     }
+    */
     //retstat = pread(fi->fh, buf, size, offset);
     return (int) retstat;
 }

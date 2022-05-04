@@ -25,6 +25,7 @@ struct fs_state {
     // and some data for compressor
     BIT_ARRAY * huffCodes[ALPHABETSIZE];
     WaveletNode * wavelet_root;
+    char groups[ALPHABETSIZE][100];
 };
 
 #define PAPFS_DATA ((struct fs_state *) fuse_get_context()->private_data)
