@@ -28,8 +28,10 @@ int clean_suite1(void)
 void testBinaryRank(void)
 {
    int answers[] = {1, 1, 1, 2, 3, 3, 3, 4, 4, 5, 5, 5};
-   for(int i = 0 ; i <= 11 ; i++)
+   for(int i = 0 ; i <= 11 ; i++){
       CU_ASSERT(rank(1, i, code) == answers[i]);
+      CU_ASSERT(rank(0, i, code) == i + 1 - answers[i]);
+   }
 }
 
 

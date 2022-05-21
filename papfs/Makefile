@@ -17,7 +17,7 @@ bit_array.o : bitarray/bit_array.c bitarray/bit_array.h
 	gcc -g -Wall `pkg-config fuse --cflags` -c bitarray/bit_array.c
 
 clean:
-	rm -f papfs *.o
+	rm -f papfs *.o test
 
 test:
 	rm -rf test/
