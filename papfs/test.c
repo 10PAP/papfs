@@ -1,11 +1,22 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "CUnit/Basic.h"
 #include "compressor.h"
+#include "fs_opers.h"
+#include "params.h"
+#include "log.h"
+
 /* Pointer to the BIT_ARRAY used by the tests. */
 static BIT_ARRAY* code = NULL;
 static WaveletNode* root = NULL;
+
 struct fs_state *PAPFS_data;
+
+/* Pointer to the file used by the tests. */
+static FILE* temp_file = NULL;
+//static char fpath[PATH_MAX];
+
 /* The suite initialization function.
  * Returns zero on success, non-zero otherwise.
  */
@@ -39,6 +50,18 @@ int init_suite1(void)
    root->right->left = NULL;
    root->right->right = NULL;
 
+
+   if ((temp_file = fopen("alabarda.txt", "w+")) == NULL) {
+      return -1;
+   }
+
+   PAPFS_DATA = malloc(sizeof(struct fs_state));
+   PAPFS_DATA->logfile = log_open();
+   PAPFS_DATA->rootdir = malloc(sizeof(char) + PATH_MAX);
+
+   strcpy(PAPFS_DATA->rootdir, "./");
+   printf("root = %s\n", PAPFS_DATA->rootdir);
+
    return 0;
 }
 
@@ -56,9 +79,22 @@ void free_tree(WaveletNode* node){
  */
 int clean_suite1(void)
 {
+   if (fclose(temp_file) != 0) {
+      return -1;
+   } else {
+      temp_file = NULL;
+      return 0;
+   }
+
    bardestroy(code);
    free_tree(root);
    return 0;
+}
+
+void testGetAttr(void) {
+   struct stat statbuf;
+   int retstat = PAPFS_getattr("alabrda.txt", &statbuf);
+   CU_ASSERT(!retstat)
 }
 
 
@@ -128,6 +164,12 @@ int main()
        (NULL == CU_add_test(pSuite, "test of getHuffmanCode()", testGetHuffmanCode)) ||
        (NULL == CU_add_test(pSuite, "test of getTreeRank()", testGetTreeRank)) || 
        (NULL == CU_add_test(pSuite, "test of decodeHuffmanCode()", testDecodeHuffmanCode)))
+   {
+      CU_cleanup_registry();
+      return CU_get_error();
+   }
+
+   if ((NULL == CU_add_test(pSuite, "test of PAPFS_getattr()", testGetAttr)))
    {
       CU_cleanup_registry();
       return CU_get_error();
