@@ -38,3 +38,7 @@ https://docs.google.com/document/d/1MKFYAwhZtXMcGVRh_7T2rZt7SrnE6X2DFMI0qINkqv8/
 ## Current algorithm description
 
 https://docs.google.com/presentation/d/1h6SCdK_gEW3Fv4t8oNDkIDxI9F7dTqPpFmlhkLNPgqM/edit?usp=sharing
+
+## About metadata redundancy
+
+https://denisenes68.notion.site/19fe834992cc4e89a4bc46ef4efe0321
