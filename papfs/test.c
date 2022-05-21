@@ -52,6 +52,8 @@ int init_suite1(void)
    if ((temp_file = fopen("alabarda.txt", "w+")) == NULL) {
       return -1;
    }
+   fprintf(temp_file, "some test data");
+    fflush(temp_file);
 
    PAPFS_DATA = malloc(sizeof(struct fs_state));
    if(!PAPFS_DATA){
@@ -59,7 +61,7 @@ int init_suite1(void)
    }
    
    PAPFS_DATA->logfile = log_open();
-   PAPFS_DATA->rootdir = malloc(sizeof(char) + PATH_MAX);
+   PAPFS_DATA->rootdir = malloc(sizeof(char) * PATH_MAX);
 
    strcpy(PAPFS_DATA->rootdir, "./");
    printf("root = %s\n", PAPFS_DATA->rootdir);
@@ -110,8 +112,12 @@ int clean_suite1(void)
 
 void testGetAttr(void) {
    struct stat statbuf;
-   int retstat = PAPFS_getattr("alabrda.txt", &statbuf);
+   int retstat = PAPFS_getattr("alabarda.txt", &statbuf);
+
    CU_ASSERT(!retstat)
+   CU_ASSERT(statbuf.st_size == 14)
+   CU_ASSERT(statbuf.st_uid == getuid())
+   CU_ASSERT(statbuf.st_gid == getgid())
 }
 
 
@@ -176,13 +182,13 @@ int main()
       return CU_get_error();
 
    /* add a suite to the registry */
-   pSuite = CU_add_suite("Suite_1", init_suite1, clean_suite1);
+   pSuite = CU_add_suite("PAPFS tests", init_suite1, clean_suite1);
    if (NULL == pSuite) {
       CU_cleanup_registry();
       return CU_get_error();
    }
 
-   /* add the tests to the suite */
+   // COMPRESSION TESTS
    if ((NULL == CU_add_test(pSuite, "test of rank()", testBinaryRank)) ||
        (NULL == CU_add_test(pSuite, "test of getHuffmanCode()", testGetHuffmanCode)) ||
        (NULL == CU_add_test(pSuite, "test of getTreeRank()", testGetTreeRank)) || 
@@ -192,6 +198,7 @@ int main()
       return CU_get_error();
    }
 
+   // FILESYSTEM OPERATIONS TESTS
    if ((NULL == CU_add_test(pSuite, "test of PAPFS_getattr()", testGetAttr)))
    {
       CU_cleanup_registry();
