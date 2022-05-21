@@ -11,8 +11,6 @@
 static BIT_ARRAY* code = NULL;
 static WaveletNode* root = NULL;
 
-struct fs_state *PAPFS_data;
-
 /* Pointer to the file used by the tests. */
 static FILE* temp_file = NULL;
 //static char fpath[PATH_MAX];
@@ -56,12 +54,27 @@ int init_suite1(void)
    }
 
    PAPFS_DATA = malloc(sizeof(struct fs_state));
+   if(!PAPFS_DATA){
+      return -1;
+   }
+   
    PAPFS_DATA->logfile = log_open();
    PAPFS_DATA->rootdir = malloc(sizeof(char) + PATH_MAX);
 
    strcpy(PAPFS_DATA->rootdir, "./");
    printf("root = %s\n", PAPFS_DATA->rootdir);
-
+   
+  
+   for(int i = 0 ; i < ALPHABETSIZE ; i++){
+      PAPFS_DATA->huffCodes[i] = 0;
+   }
+   PAPFS_DATA->huffCodes['a'] = barcreate(2);
+   PAPFS_DATA->huffCodes['b'] = barcreate(2);
+   PAPFS_DATA->huffCodes['c'] = barcreate(2);
+   bit_array_from_str(PAPFS_DATA->huffCodes['a'], "10");
+   bit_array_from_str(PAPFS_DATA->huffCodes['b'], "01");
+   bit_array_from_str(PAPFS_DATA->huffCodes['c'], "00");
+   
    return 0;
 }
 
@@ -88,6 +101,10 @@ int clean_suite1(void)
 
    bardestroy(code);
    free_tree(root);
+   for(int i = 0 ; i < ALPHABETSIZE ; i++){
+      if(PAPFS_DATA->huffCodes[i])
+         bardestroy(PAPFS_DATA->huffCodes[i]);
+   }
    return 0;
 }
 
@@ -131,6 +148,7 @@ void testGetTreeRank(void)
    CU_ASSERT(getTreeRank(root, 2, code, 0) == 0);
    CU_ASSERT(getTreeRank(root, 3, code, 0) == 1);
    CU_ASSERT(getTreeRank(root, 4, code, 0) == 1);
+   bardestroy(code);
 }
 
 void testDecodeHuffmanCode(void)
@@ -138,6 +156,11 @@ void testDecodeHuffmanCode(void)
    BIT_ARRAY* code = barcreate(2);
    bit_array_from_str(code, "10");
    CU_ASSERT(decodeHuffmanCode(code) == 'a');
+   bit_array_from_str(code, "01");
+   CU_ASSERT(decodeHuffmanCode(code) == 'b');
+   bit_array_from_str(code, "00");
+   CU_ASSERT(decodeHuffmanCode(code) == 'c');
+   bardestroy(code);
 }
 
 /* The main() function for setting up and running the tests.
