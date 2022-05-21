@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
+
 #include "CUnit/Basic.h"
 #include "compressor.h"
 #include "fs_opers.h"
@@ -98,8 +100,14 @@ int clean_suite1(void)
       return -1;
    } else {
       temp_file = NULL;
-      return 0;
    }
+
+    if (remove("alabarda.txt") != 0) {
+        return -1;
+    }
+    if (remove("test_pipe") != 0) {
+        return -1;
+    }
 
    bardestroy(code);
    free_tree(root);
@@ -108,16 +116,6 @@ int clean_suite1(void)
          bardestroy(PAPFS_DATA->huffCodes[i]);
    }
    return 0;
-}
-
-void testGetAttr(void) {
-   struct stat statbuf;
-   int retstat = PAPFS_getattr("alabarda.txt", &statbuf);
-
-   CU_ASSERT(!retstat)
-   CU_ASSERT(statbuf.st_size == 14)
-   CU_ASSERT(statbuf.st_uid == getuid())
-   CU_ASSERT(statbuf.st_gid == getgid())
 }
 
 
@@ -169,6 +167,46 @@ void testDecodeHuffmanCode(void)
    bardestroy(code);
 }
 
+void testGetAttr(void) {
+    struct stat statbuf;
+    int retstat = PAPFS_getattr("alabarda.txt", &statbuf);
+
+    CU_ASSERT(!retstat)
+    CU_ASSERT(statbuf.st_size == 14)
+    CU_ASSERT(statbuf.st_uid == getuid())
+    CU_ASSERT(statbuf.st_gid == getgid())
+}
+
+void testMknod(void) {
+    // create pipe
+    mode_t mode = S_IRUSR | S_IWUSR | S_IFIFO;
+
+    int retstat = PAPFS_mknod("test_pipe", mode, 0);
+    CU_ASSERT(retstat >= 0)
+
+    // get attributes
+    struct  stat statbuf;
+    int rretstat = PAPFS_getattr("test_pipe", &statbuf);
+
+    CU_ASSERT(rretstat == 0)
+    CU_ASSERT(statbuf.st_uid == getuid())
+    CU_ASSERT(statbuf.st_mode = S_IRUSR | S_IWUSR | S_IFIFO) // check mode
+}
+
+void testUnlink(void) {
+    const char * path = "remove_me.txt";
+    // create file
+    FILE * unlink_file = fopen(path, "w+");
+    fprintf(unlink_file, "some important information");
+    fclose(unlink_file);
+
+    int retstat = PAPFS_unlink(path);
+    CU_ASSERT(retstat == 0)
+
+    // check that file doesn't exist
+    CU_ASSERT(access(path, F_OK) != 0)
+}
+
 /* The main() function for setting up and running the tests.
  * Returns a CUE_SUCCESS on successful running, another
  * CUnit error code on failure.
@@ -199,7 +237,9 @@ int main()
    }
 
    // FILESYSTEM OPERATIONS TESTS
-   if ((NULL == CU_add_test(pSuite, "test of PAPFS_getattr()", testGetAttr)))
+   if ((NULL == CU_add_test(pSuite, "test of PAPFS_getattr()", testGetAttr)) ||
+       (NULL == CU_add_test(pSuite, "test of PAPFS_mknod()", testMknod)) ||
+       (NULL == CU_add_test(pSuite, "test of PAPFS_unlink()", testUnlink)))
    {
       CU_cleanup_registry();
       return CU_get_error();
