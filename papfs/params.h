@@ -27,7 +27,12 @@ struct fs_state {
     WaveletNode * wavelet_root;
 };
 
+#ifndef TEST
 #define PAPFS_DATA ((struct fs_state *) fuse_get_context()->private_data)
+#else
+struct fs_state * temp_state;
+#define PAPFS_DATA temp_state
+#endif
 
 #include <fuse.h>
 
