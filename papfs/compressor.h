@@ -17,5 +17,6 @@ uint32_t getTreeRank(WaveletNode * node, unsigned long i, BIT_ARRAY * code, unsi
 void ra_read();
 unsigned int rank(char bit, unsigned int i, BIT_ARRAY * bitmap);
 int getHuffmanCode(WaveletNode * node, unsigned long i, BIT_ARRAY * resBits, int l);
+uint8_t decodeHuffmanCode(BIT_ARRAY * bits);
 
 #endif

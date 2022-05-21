@@ -5,6 +5,7 @@
 /* Pointer to the BIT_ARRAY used by the tests. */
 static BIT_ARRAY* code = NULL;
 static WaveletNode* root = NULL;
+struct fs_state *PAPFS_data;
 /* The suite initialization function.
  * Returns zero on success, non-zero otherwise.
  */
@@ -83,6 +84,25 @@ void testGetHuffmanCode(void)
    bardestroy(real);
 }
 
+void testGetTreeRank(void)
+{
+   BIT_ARRAY* code = barcreate(2);
+   bit_array_from_str(code, "10");
+   CU_ASSERT(getTreeRank(root, 1, code, 0) == 1);
+   CU_ASSERT(getTreeRank(root, 4, code, 0) == 2);
+   bit_array_from_str(code, "00");
+   CU_ASSERT(getTreeRank(root, 1, code, 0) == 0);
+   CU_ASSERT(getTreeRank(root, 2, code, 0) == 0);
+   CU_ASSERT(getTreeRank(root, 3, code, 0) == 1);
+   CU_ASSERT(getTreeRank(root, 4, code, 0) == 1);
+}
+
+void testDecodeHuffmanCode(void)
+{
+   BIT_ARRAY* code = barcreate(2);
+   bit_array_from_str(code, "10");
+   CU_ASSERT(decodeHuffmanCode(code) == 'a');
+}
 
 /* The main() function for setting up and running the tests.
  * Returns a CUE_SUCCESS on successful running, another
@@ -104,8 +124,10 @@ int main()
    }
 
    /* add the tests to the suite */
-   /* NOTE - ORDER IS IMPORTANT - MUST TEST fread() AFTER fprintf() */
-   if ((NULL == CU_add_test(pSuite, "test of rank()", testBinaryRank)) || (NULL == CU_add_test(pSuite, "test of getHuffmanCode()", testGetHuffmanCode)))
+   if ((NULL == CU_add_test(pSuite, "test of rank()", testBinaryRank)) ||
+       (NULL == CU_add_test(pSuite, "test of getHuffmanCode()", testGetHuffmanCode)) ||
+       (NULL == CU_add_test(pSuite, "test of getTreeRank()", testGetTreeRank)) || 
+       (NULL == CU_add_test(pSuite, "test of decodeHuffmanCode()", testDecodeHuffmanCode)))
    {
       CU_cleanup_registry();
       return CU_get_error();
