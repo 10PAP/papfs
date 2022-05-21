@@ -26,3 +26,9 @@ test:
 	mkdir test/mount
 	cp papfs test/papfs
 	cp data.bin test/root/data.bin
+
+test.o : test.c
+	gcc -g -Wall `pkg-config fuse --cflags` -c test.c
+
+test_cases : log.o fs_opers.o compressor.o bit_array.o test.o
+	gcc -g -o test test.o log.o fs_opers.o compressor.o bit_array.o `pkg-config fuse --libs` -lcunit
