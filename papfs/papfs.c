@@ -37,8 +37,7 @@ int PAPFS_read(const char *path, char *buf, size_t size, off_t offset, struct fu
         if (res == -1) {
             break;
         }
-        buf[i] = PAPFS_DATA->groups[res][getTreeRank(PAPFS_DATA->wavelet_root, i, PAPFS_DATA->huffCodes[res], 0)];
-        log_print("DEBUG: readed symbol: %c\n", buf[i]);
+        buf[i] = (char) res;
         retstat++;
     }
     /*

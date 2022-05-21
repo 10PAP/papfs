@@ -61,9 +61,6 @@ int load_metadata(int fd) {
         }
 
         PAPFS_DATA->huffCodes[i] = barr;
-        // TODO: read these arrays from file...
-        for(int j = 0 ; j < 100 ; j++)
-            PAPFS_DATA->groups[i][j] = i;
     }
 
     log_print("DEBUG: huffcodes reading complete");
