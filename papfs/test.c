@@ -207,6 +207,48 @@ void testUnlink(void) {
     CU_ASSERT(access(path, F_OK) != 0)
 }
 
+void testRename(void) {
+    const char * path = "rename_me.txt";
+    FILE * rename_file = fopen(path, "w+");
+    fprintf(rename_file, "some data data data");
+    fclose(rename_file);
+
+    const char * new_path = "new_rename_me.txt";
+    int retstat = PAPFS_rename(path, new_path);
+    CU_ASSERT(retstat == 0)
+
+    rename_file = fopen(new_path, "w+");
+    CU_ASSERT(rename_file != NULL)
+
+    remove(path);
+}
+
+void testUtime(void) {
+    const char * path = "utime.txt";
+    FILE * utime_file = fopen(path, "w+");
+    fprintf(utime_file, "data data data\n");
+    fclose(utime_file);
+
+    // get current modification time
+    struct stat statbuf;
+    PAPFS_getattr(path, &statbuf);
+    time_t time1 = statbuf.st_mtime;
+
+    // change modification time to epoch
+    struct utimbuf utime;
+    utime.actime = 0;
+    utime.modtime = 0;
+    PAPFS_utime(path, &utime);
+
+    // and again get modification time
+    PAPFS_getattr(path, &statbuf);
+    time_t time2 = statbuf.st_mtime;
+
+    CU_ASSERT(time1 != time2)
+
+    remove(path);
+}
+
 /* The main() function for setting up and running the tests.
  * Returns a CUE_SUCCESS on successful running, another
  * CUnit error code on failure.
@@ -239,7 +281,9 @@ int main()
    // FILESYSTEM OPERATIONS TESTS
    if ((NULL == CU_add_test(pSuite, "test of PAPFS_getattr()", testGetAttr)) ||
        (NULL == CU_add_test(pSuite, "test of PAPFS_mknod()", testMknod)) ||
-       (NULL == CU_add_test(pSuite, "test of PAPFS_unlink()", testUnlink)))
+       (NULL == CU_add_test(pSuite, "test of PAPFS_unlink()", testUnlink)) ||
+       (NULL == CU_add_test(pSuite, "test of PAPFS_rename()", testRename)) ||
+       (NULL == CU_add_test(pSuite, "test of PAPFS_utime()", testUtime)))
    {
       CU_cleanup_registry();
       return CU_get_error();

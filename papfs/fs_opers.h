@@ -5,9 +5,9 @@ void getFullPath(char fpath[PATH_MAX], const char *path);
 
 int PAPFS_getattr(const char *path, struct stat *statbuf); // +
 int PAPFS_mknod(const char *path, mode_t mode, dev_t dev); // +
-int PAPFS_unlink(const char *path);
-int PAPFS_rename(const char *path, const char *newpath);
-int PAPFS_utime(const char *path, struct utimbuf *ubuf);
+int PAPFS_unlink(const char *path);                        // +
+int PAPFS_rename(const char *path, const char *newpath);   // +
+int PAPFS_utime(const char *path, struct utimbuf *ubuf);   // +
 int PAPFS_open(const char *path, struct fuse_file_info *fi);
 int PAPFS_release(const char *path, struct fuse_file_info *fi);
 int PAPFS_access(const char *path, int mask);
