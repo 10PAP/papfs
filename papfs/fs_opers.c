@@ -1,6 +1,6 @@
 #include "params.h"
 #include "log.h"
-
+#include "cversion/cversion.h"
 #include <stdlib.h>
 #include <dirent.h>
 #include <errno.h>
@@ -159,6 +159,22 @@ int PAPFS_release(const char *path, struct fuse_file_info *fi) {
 
     // clear metadata
     int id = fd_to_id(fi->fh);
+    
+
+    // if file is not compressed already, we'll check if it's appropriate
+    if(PAPFS_DATA->metadata[id].type_flag == 0){
+        off_t sz = lseek(fi->fh, 0L, SEEK_END) - 1;
+
+        unsigned char* buffer = malloc(sz);
+        pread(fi->fh, buffer, sz, 1);
+        lseek(fi->fh, 0L, SEEK_SET);
+        //close(fi->fh);
+        //fi->fh = open(path, O_RDWR | O_TRUNC);
+        if(sz > 10){
+            compress(buffer, sz, fi->fh);
+        }
+    }
+    
     if (id == PAPFS_DATA->opened_N-1) {
         PAPFS_DATA->opened_N--;
     } else {

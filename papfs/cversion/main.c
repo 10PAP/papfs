@@ -78,7 +78,7 @@ int printTree(WaveletTreeNode* root)
     return res;
 }
   
-unsigned int rank(unsigned int bit, unsigned int i, cvector_vector_type(char) bitmap){
+static unsigned int rank(unsigned int bit, unsigned int i, cvector_vector_type(char) bitmap){
   unsigned int res = 0;
   for(int j = 0 ; j <= i ; j++)
     if(bitmap[j] == bit)
@@ -86,7 +86,7 @@ unsigned int rank(unsigned int bit, unsigned int i, cvector_vector_type(char) bi
   return res;
 }
 
-void* getHuffmanCode(WaveletTreeNode* root, unsigned int i, cvector_vector_type(char) resBits){
+static void* getHuffmanCode(WaveletTreeNode* root, unsigned int i, cvector_vector_type(char) resBits){
   char bit = root->bitmap[i];
   unsigned int position = rank(bit, i, root->bitmap) - 1;
   WaveletTreeNode* next = (!bit)?root->left:root->right;
@@ -96,7 +96,7 @@ void* getHuffmanCode(WaveletTreeNode* root, unsigned int i, cvector_vector_type(
   return getHuffmanCode(next, position, resBits);
 }
 
-char decodeHuffmanCode(cvector_vector_type(char) bits){
+static char decodeHuffmanCode(cvector_vector_type(char) bits){
   int size = sizeof(huffCodes) / sizeof(huffCodes[0]);
   for(unsigned char i = 0 ; i < size ; i++){  
     int j = 0;
@@ -129,25 +129,11 @@ void freeTree(WaveletTreeNode* node){
   free(node);
 }
 
-void serializeAll(WaveletTreeNode * root);
+void serializeAll(WaveletTreeNode * root, int fd);
 
 int freqs[ALPHABETSIZE];
 unsigned char arr[ALPHABETSIZE];
-int main(int argc, char** argv){
-  FILE * infile = fopen(argv[1], "rb");
-  printf("test %s\n", argv[1]);
-
-  fseek(infile, 0L, SEEK_END);
-  unsigned long n = ftell(infile);
-  fseek(infile, 0L, SEEK_SET);
-  printf("file_size: %lu\n", n);
-
-  unsigned char * buffer = (char*) malloc(n);
-  fread(buffer, n, 1, infile);
-  fclose(infile);
-
-  printf("File reading finished\n");
-
+int compress(unsigned char* buffer, size_t n, int fd){
   
   for(int i = 0 ; i < n ; i++)
     freqs[buffer[i]]++;
@@ -183,7 +169,7 @@ int main(int argc, char** argv){
 
   printf("compressed_size, bytes: %d\n", compressed_size / 8);
 
-  serializeAll(root);
+  serializeAll(root, fd);
 
   free(buffer);
   freeTree(root);
@@ -312,8 +298,8 @@ off_t serializeHuffmanCodes(FILE * out) {
   return huff_offset;
 }
 
-void serializeAll(WaveletTreeNode * root) {
-  FILE * output = fopen("data.bin", "wb");
+void serializeAll(WaveletTreeNode * root, int fd) {
+  FILE * output = fdopen(fd, "wb");
 
   char compressed = 1;
   fwrite(&compressed, 1, 1, output);

@@ -1,5 +1,5 @@
-all : papfs.o log.o fs_opers.o compressor.o bit_array.o
-	gcc -g -O0 -fsanitize=address -static-libasan -o papfs papfs.o log.o fs_opers.o compressor.o bit_array.o `pkg-config fuse --libs`
+all : papfs.o log.o fs_opers.o compressor.o bit_array.o libcversion.a
+	gcc -g -O0 -fsanitize=address -static-libasan -o papfs papfs.o log.o fs_opers.o compressor.o bit_array.o `pkg-config fuse --libs` -L. -lcversion
 
 papfs.o : papfs.c log.h params.h fs_opers.h compressor.h
 	gcc -g -Wall -fsanitize=address `pkg-config fuse --cflags` -c papfs.c 
@@ -16,8 +16,17 @@ compressor.o : compressor.c compressor.h params.h
 bit_array.o : bitarray/bit_array.c bitarray/bit_array.h
 	gcc -g -Wall -fsanitize=address `pkg-config fuse --cflags` -c bitarray/bit_array.c
 
+huffman.o : cversion/huffman.c cversion/huffman.h
+	gcc -O -c cversion/huffman.c -o huffman.o
+
+main.o : cversion/main.c cversion/cversion.h
+	gcc -O -c cversion/main.c -o main.o
+
+libcversion.a : bit_array.o huffman.o main.o
+	ar rcs libcversion.a bit_array.o huffman.o main.o
+
 clean:
-	rm -f papfs *.o test
+	rm -f papfs *.o test *.a
 
 test:
 	rm -rf test/
