@@ -185,16 +185,6 @@ int main(int argc, char** argv){
 
   serializeAll(root);
 
-  cvector_vector_type(char) code = NULL;
-  /*
-  for(unsigned int pos = 0 ; pos < 20 ; pos++){
-    code = getHuffmanCode(root, pos, code);
-    printf("%c", decodeHuffmanCode(code));
-    cvector_free(code);
-    code = NULL;
-  }
-  printf("\n");
-  */
   free(buffer);
   freeTree(root);
 
@@ -293,7 +283,7 @@ void serializeTree(FILE * out, WaveletTreeNode * node) {
 }
 
 off_t serializeHuffmanCodes(FILE * out) {
-  off_t huff_offset = 0;
+  off_t huff_offset = 1;
   printf("Codes:\n");
   for (int code = 0; code < ALPHABETSIZE; code++) {
     if (huffCodes[code] == NULL) {
@@ -324,6 +314,9 @@ off_t serializeHuffmanCodes(FILE * out) {
 
 void serializeAll(WaveletTreeNode * root) {
   FILE * output = fopen("data.bin", "wb");
+
+  char compressed = 1;
+  fwrite(&compressed, 1, 1, output);
 
   // serialize huffman codes
   bitmap_offset = serializeHuffmanCodes(output);
