@@ -69,24 +69,19 @@ int PAPFS_read(const char *path, char *buf, size_t size, off_t offset, struct fu
     // get id of file metadata in PAPFS_DATA structure
     int file_id = fd_to_id(fi->fh);
 
-    for (unsigned long i = 0; i < size; i++) {
-        int res = random_access_read_symbol(file_id, ((unsigned long) offset) + i);
-        if (res == -1) {
-            break;
+    if(PAPFS_DATA->metadata[file_id].type_flag == 1){
+        for (unsigned long i = 0; i < size; i++) {
+            int res = random_access_read_symbol(file_id, ((unsigned long) offset) + i);
+            if (res == -1) {
+                break;
+            }
+            buf[i] = (char) res;
+            retstat++;
         }
-        buf[i] = (char) res;
-        retstat++;
     }
-    /*
-    for(char c = 'a' ; c <= 'z' ; c++){
-      log_print("DEBUG: rank(%c, 8) = %d\n", c, getTreeRank(
-                                              PAPFS_DATA->wavelet_root,
-                                              8,
-                                              PAPFS_DATA->huffCodes[c],
-                                              0));
+    else {
+        retstat = pread(fi->fh, buf, size, offset+1);
     }
-    */
-    //retstat = pread(fi->fh, buf, size, offset);
     return (int) retstat;
 }
 
