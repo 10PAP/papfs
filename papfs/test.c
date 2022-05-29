@@ -91,6 +91,7 @@ void free_tree(WaveletNode* node){
    if(node->right){
       free_tree(node->right);
    }
+   bardestroy(node->bitmap);
    free(node);
 }
 /* The suite cleanup function.
@@ -109,6 +110,9 @@ int clean_suite1(void)
     }
     if (remove("test_pipe") != 0) {
         return -1;
+    }
+    if (remove("new_rename_me.txt") != 0) {
+       return -1;
     }
 
    bardestroy(code);
