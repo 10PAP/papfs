@@ -44,26 +44,16 @@ static WaveletNode * load_node(FILE * file) {
     return current_node;
 }
 
+int update_fdtable(int fd, int file_type);
+
 int load_metadata(int fd) {
-    int opened_N = PAPFS_DATA->opened_N;
 
     FILE *file = fdopen(fd, "rb");
     if (!file) {
         log_error("PAPFS_open error caused by fdopen\n");
     }
 
-    // update fd table
-    int new_id = opened_N;
-    PAPFS_DATA->opened_N++;
-    for (int i = 0; i < opened_N; i++) {
-        if (PAPFS_DATA->fd_table[i] == -1) {
-            new_id = i;
-            PAPFS_DATA->opened_N--;
-            break;
-        }
-    }
-    PAPFS_DATA->fd_table[new_id] = fd;
-    log_print("METADATA: new id for file descr: %d\n", new_id);
+    int new_id = update_fdtable(fd, 1);
 
     //read huffman codes
     for (int i = 0; i < ALPHABETSIZE; i++) {

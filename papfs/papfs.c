@@ -7,6 +7,26 @@
 #include "fs_opers.h"
 #include "compressor.h"
 
+int update_fdtable(int fd, int file_type) {
+    // update fd table
+    int new_id = PAPFS_DATA->opened_N;
+    PAPFS_DATA->opened_N++;
+
+    for (int i = 0; i < PAPFS_DATA->opened_N; i++) {
+        if (PAPFS_DATA->fd_table[i] == -1) {
+            new_id = i;
+            PAPFS_DATA->opened_N--;
+            break;
+        }
+    }
+
+    PAPFS_DATA->fd_table[new_id] = fd;
+    PAPFS_DATA->metadata[new_id].type_flag = file_type;
+    log_print("METADATA: new id for file descr: %d\n", new_id);
+
+    return new_id;
+}
+
 int PAPFS_open(const char *path, struct fuse_file_info *fi) {
     int retstat = 0;
     int fd;
@@ -28,14 +48,14 @@ int PAPFS_open(const char *path, struct fuse_file_info *fi) {
         return -1;
 
     if (type_flag) {
+        // 1) compressed file
 
         // get metadata from file
         load_metadata(fd);
-
     } else {
+        // 2) plain file
         
-        
-
+        update_fdtable(fd, 0);
     }
 
     return retstat;

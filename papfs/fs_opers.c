@@ -160,7 +160,6 @@ int PAPFS_release(const char *path, struct fuse_file_info *fi) {
     // clear metadata
     int id = fd_to_id(fi->fh);
     if (id == PAPFS_DATA->opened_N-1) {
-        PAPFS_DATA->fd_table[id] = -1;
         PAPFS_DATA->opened_N--;
     } else {
         PAPFS_DATA->fd_table[id] = -1;
