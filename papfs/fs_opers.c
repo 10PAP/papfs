@@ -55,6 +55,16 @@ int PAPFS_mknod(const char *path, mode_t mode, dev_t dev) {
     if (retstat < 0)
         retstat = log_error("PAPFS_mknod mknod");
 
+    int fd;
+    fd = open(fpath, O_WRONLY);
+    if (fd < 0)
+        fd = log_error("PAPFS_mknod mknod");
+
+    char type_flag = 0;
+    write(fd, &type_flag, 1);
+
+    close(fd);
+
     return retstat;
 }
 

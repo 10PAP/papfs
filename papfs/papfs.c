@@ -21,8 +21,22 @@ int PAPFS_open(const char *path, struct fuse_file_info *fi) {
         retstat = log_error("PAPFS_open open");
     fi->fh = fd;
 
-    // get metadata from file
-    load_metadata(fd);
+    // check file type
+    char type_flag;
+    char res = read(fd, &type_flag, 1);
+    if (res != 1)
+        return -1;
+
+    if (type_flag) {
+
+        // get metadata from file
+        load_metadata(fd);
+
+    } else {
+        
+        
+
+    }
 
     return retstat;
 }

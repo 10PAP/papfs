@@ -20,6 +20,7 @@ typedef struct WaveletNode {
 } WaveletNode;
 
 typedef struct File_Metadata {
+    char type_flag;
     BIT_ARRAY * huffCodes[ALPHABETSIZE];
     WaveletNode * wavelet_root;
 } File_Metadata;
