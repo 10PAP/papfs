@@ -117,6 +117,18 @@ char decodeHuffmanCode(cvector_vector_type(char) bits){
   }
 }
 
+
+void freeTree(WaveletTreeNode* node){
+  if(node->left){
+    freeTree(node->left);
+  }
+  if(node->right){
+    freeTree(node->right);
+  }
+  cvector_free(node->bitmap);
+  free(node);
+}
+
 void serializeAll(WaveletTreeNode * root);
 
 int freqs[ALPHABETSIZE];
@@ -183,6 +195,8 @@ int main(int argc, char** argv){
   }
   printf("\n");
   */
+  free(buffer);
+  freeTree(root);
 
   return 0;
 }

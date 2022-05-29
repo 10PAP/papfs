@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "huffman.h"
+#include <assert.h>
 
-// A utility function allocate a new
-// min heap node with given character
-// and frequency of the character
+// yeees we have resource management, it's called "C++"
+struct MinHeapNode* node_allocations[1024];
+size_t node_allocations_size = 0;
+
+
 struct MinHeapNode* newNode(unsigned char data, unsigned freq)
 {
     struct MinHeapNode* temp = (struct MinHeapNode*)malloc(
@@ -13,6 +16,9 @@ struct MinHeapNode* newNode(unsigned char data, unsigned freq)
     temp->left = temp->right = NULL;
     temp->data = data;
     temp->freq = freq;
+
+    // utility
+    node_allocations[node_allocations_size++] = temp;
   
     return temp;
 }
@@ -90,7 +96,7 @@ struct MinHeapNode* extractMin(struct MinHeap* minHeap)
   
     struct MinHeapNode* temp = minHeap->array[0];
     minHeap->array[0] = minHeap->array[minHeap->size - 1];
-  
+
     --minHeap->size;
     minHeapify(minHeap, 0);
   
@@ -207,7 +213,11 @@ struct MinHeapNode* buildHuffmanTree(unsigned char * data,
   
     // Step 4: The remaining node is the
     // root node and the tree is complete.
-    return extractMin(minHeap);
+    assert(minHeap->size == 1);
+    struct MinHeapNode* root = extractMin(minHeap);
+    free(minHeap->array);
+    free(minHeap);
+    return root;
 }
   
 // Prints huffman codes from the root of Huffman Tree.
@@ -259,4 +269,6 @@ void HuffmanCodes(unsigned char * data, int * freq, int size)
     int arr[MAX_TREE_HT], top = 0;
   
     printCodes(root, arr, top);
+    for(size_t i = 0 ; i < node_allocations_size ; i++)
+      free(node_allocations[i]);
 }
