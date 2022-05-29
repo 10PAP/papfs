@@ -36,7 +36,9 @@ int PAPFS_open(const char *path, struct fuse_file_info *fi) {
     getFullPath(fpath, path);
 
     // open file
-    fd = open(fpath, fi->flags);
+    
+    // TODO : normal flags handling
+    fd = open(fpath, O_RDWR);
     if (fd < 0)
         retstat = log_error("PAPFS_open open");
     fi->fh = fd;
@@ -49,12 +51,14 @@ int PAPFS_open(const char *path, struct fuse_file_info *fi) {
 
     if (type_flag) {
         // 1) compressed file
+        log_print("This is compressed file\n");
 
         // get metadata from file
         load_metadata(fd);
     } else {
         // 2) plain file
-        
+        log_print("This is plain file\n");
+
         update_fdtable(fd, 0);
     }
 
@@ -94,8 +98,8 @@ int PAPFS_write(const char *path, const char *buf, size_t size, off_t offset, st
 
     int file_id = fd_to_id(fi->fh);
 
-    if(PAPFS_DATA->metadata[file_id].type_flag == 1){
-      retstat = pwrite(fi->fh, buf, size, offset);
+    if(PAPFS_DATA->metadata[file_id].type_flag == 0){
+      retstat = pwrite(fi->fh, buf, size, offset+1);
       if (retstat < 0){
         retstat = log_error("PAPFS_write pwrite");
       }
