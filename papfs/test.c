@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
+
 #include "CUnit/Basic.h"
 #include "compressor.h"
 #include "fs_opers.h"
@@ -52,6 +54,8 @@ int init_suite1(void)
    if ((temp_file = fopen("alabarda.txt", "w+")) == NULL) {
       return -1;
    }
+   fprintf(temp_file, "some test data");
+    fflush(temp_file);
 
    PAPFS_DATA = malloc(sizeof(struct fs_state));
    if(!PAPFS_DATA){
@@ -59,7 +63,7 @@ int init_suite1(void)
    }
    
    PAPFS_DATA->logfile = log_open();
-   PAPFS_DATA->rootdir = malloc(sizeof(char) + PATH_MAX);
+   PAPFS_DATA->rootdir = malloc(sizeof(char) * PATH_MAX);
 
    strcpy(PAPFS_DATA->rootdir, "./");
    printf("root = %s\n", PAPFS_DATA->rootdir);
@@ -96,8 +100,14 @@ int clean_suite1(void)
       return -1;
    } else {
       temp_file = NULL;
-      return 0;
    }
+
+    if (remove("alabarda.txt") != 0) {
+        return -1;
+    }
+    if (remove("test_pipe") != 0) {
+        return -1;
+    }
 
    bardestroy(code);
    free_tree(root);
@@ -106,12 +116,6 @@ int clean_suite1(void)
          bardestroy(PAPFS_DATA->huffCodes[i]);
    }
    return 0;
-}
-
-void testGetAttr(void) {
-   struct stat statbuf;
-   int retstat = PAPFS_getattr("alabrda.txt", &statbuf);
-   CU_ASSERT(!retstat)
 }
 
 
@@ -163,6 +167,88 @@ void testDecodeHuffmanCode(void)
    bardestroy(code);
 }
 
+void testGetAttr(void) {
+    struct stat statbuf;
+    int retstat = PAPFS_getattr("alabarda.txt", &statbuf);
+
+    CU_ASSERT(!retstat)
+    CU_ASSERT(statbuf.st_size == 14)
+    CU_ASSERT(statbuf.st_uid == getuid())
+    CU_ASSERT(statbuf.st_gid == getgid())
+}
+
+void testMknod(void) {
+    // create pipe
+    mode_t mode = S_IRUSR | S_IWUSR | S_IFIFO;
+
+    int retstat = PAPFS_mknod("test_pipe", mode, 0);
+    CU_ASSERT(retstat >= 0)
+
+    // get attributes
+    struct  stat statbuf;
+    int rretstat = PAPFS_getattr("test_pipe", &statbuf);
+
+    CU_ASSERT(rretstat == 0)
+    CU_ASSERT(statbuf.st_uid == getuid())
+    CU_ASSERT(statbuf.st_mode = S_IRUSR | S_IWUSR | S_IFIFO) // check mode
+}
+
+void testUnlink(void) {
+    const char * path = "remove_me.txt";
+    // create file
+    FILE * unlink_file = fopen(path, "w+");
+    fprintf(unlink_file, "some important information");
+    fclose(unlink_file);
+
+    int retstat = PAPFS_unlink(path);
+    CU_ASSERT(retstat == 0)
+
+    // check that file doesn't exist
+    CU_ASSERT(access(path, F_OK) != 0)
+}
+
+void testRename(void) {
+    const char * path = "rename_me.txt";
+    FILE * rename_file = fopen(path, "w+");
+    fprintf(rename_file, "some data data data");
+    fclose(rename_file);
+
+    const char * new_path = "new_rename_me.txt";
+    int retstat = PAPFS_rename(path, new_path);
+    CU_ASSERT(retstat == 0)
+
+    rename_file = fopen(new_path, "w+");
+    CU_ASSERT(rename_file != NULL)
+
+    remove(path);
+}
+
+void testUtime(void) {
+    const char * path = "utime.txt";
+    FILE * utime_file = fopen(path, "w+");
+    fprintf(utime_file, "data data data\n");
+    fclose(utime_file);
+
+    // get current modification time
+    struct stat statbuf;
+    PAPFS_getattr(path, &statbuf);
+    time_t time1 = statbuf.st_mtime;
+
+    // change modification time to epoch
+    struct utimbuf utime;
+    utime.actime = 0;
+    utime.modtime = 0;
+    PAPFS_utime(path, &utime);
+
+    // and again get modification time
+    PAPFS_getattr(path, &statbuf);
+    time_t time2 = statbuf.st_mtime;
+
+    CU_ASSERT(time1 != time2)
+
+    remove(path);
+}
+
 /* The main() function for setting up and running the tests.
  * Returns a CUE_SUCCESS on successful running, another
  * CUnit error code on failure.
@@ -176,13 +262,13 @@ int main()
       return CU_get_error();
 
    /* add a suite to the registry */
-   pSuite = CU_add_suite("Suite_1", init_suite1, clean_suite1);
+   pSuite = CU_add_suite("PAPFS tests", init_suite1, clean_suite1);
    if (NULL == pSuite) {
       CU_cleanup_registry();
       return CU_get_error();
    }
 
-   /* add the tests to the suite */
+   // COMPRESSION TESTS
    if ((NULL == CU_add_test(pSuite, "test of rank()", testBinaryRank)) ||
        (NULL == CU_add_test(pSuite, "test of getHuffmanCode()", testGetHuffmanCode)) ||
        (NULL == CU_add_test(pSuite, "test of getTreeRank()", testGetTreeRank)) || 
@@ -192,7 +278,12 @@ int main()
       return CU_get_error();
    }
 
-   if ((NULL == CU_add_test(pSuite, "test of PAPFS_getattr()", testGetAttr)))
+   // FILESYSTEM OPERATIONS TESTS
+   if ((NULL == CU_add_test(pSuite, "test of PAPFS_getattr()", testGetAttr)) ||
+       (NULL == CU_add_test(pSuite, "test of PAPFS_mknod()", testMknod)) ||
+       (NULL == CU_add_test(pSuite, "test of PAPFS_unlink()", testUnlink)) ||
+       (NULL == CU_add_test(pSuite, "test of PAPFS_rename()", testRename)) ||
+       (NULL == CU_add_test(pSuite, "test of PAPFS_utime()", testUtime)))
    {
       CU_cleanup_registry();
       return CU_get_error();
