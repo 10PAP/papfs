@@ -32,8 +32,11 @@ int PAPFS_read(const char *path, char *buf, size_t size, off_t offset, struct fu
 
     log_print("\nPAPFS_read(path=\"%s\", buf=0x%08x, size=%d, offset=%lld, fi=0x%08x)\n", path, buf, size, offset, fi);
 
+    // get id of file metadata in PAPFS_DATA structure
+    int file_id = fd_to_id(fi->fh);
+
     for (unsigned long i = 0; i < size; i++) {
-        int res = random_access_read_symbol(fi->fh, ((unsigned long) offset) + i);
+        int res = random_access_read_symbol(file_id, ((unsigned long) offset) + i);
         if (res == -1) {
             break;
         }
@@ -113,6 +116,8 @@ int main(int argc, char *argv[]) {
     	perror("main calloc");
 	    abort();
     }
+
+    PAPFS_data->opened_N = 0;
 
     // add rootdir to private data
     PAPFS_data->rootdir = realpath(argv[argc-2], NULL);

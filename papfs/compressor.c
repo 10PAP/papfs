@@ -45,11 +45,25 @@ static WaveletNode * load_node(FILE * file) {
 }
 
 int load_metadata(int fd) {
+    int opened_N = PAPFS_DATA->opened_N;
 
     FILE *file = fdopen(fd, "rb");
     if (!file) {
         log_error("PAPFS_open error caused by fdopen\n");
     }
+
+    // update fd table
+    int new_id = opened_N;
+    PAPFS_DATA->opened_N++;
+    for (int i = 0; i < opened_N; i++) {
+        if (PAPFS_DATA->fd_table[i] == -1) {
+            new_id = i;
+            PAPFS_DATA->opened_N--;
+            break;
+        }
+    }
+    PAPFS_DATA->fd_table[new_id] = fd;
+    log_print("METADATA: new id for file descr: %d\n", new_id);
 
     //read huffman codes
     for (int i = 0; i < ALPHABETSIZE; i++) {
@@ -60,7 +74,7 @@ int load_metadata(int fd) {
             log_error("Error in huffman code loading ");
         }
 
-        PAPFS_DATA->huffCodes[i] = barr;
+        PAPFS_DATA->metadata[new_id].huffCodes[i] = barr;
     }
 
     log_print("DEBUG: huffcodes reading complete");
@@ -76,7 +90,7 @@ int load_metadata(int fd) {
 
     // Wavelet-tree reading
     WaveletNode * root = load_node(file);
-    PAPFS_DATA->wavelet_root = root;
+    PAPFS_DATA->metadata[new_id].wavelet_root = root;
 
     fclose(file);
     return 0;
@@ -125,10 +139,10 @@ uint32_t getTreeRank(WaveletNode * node, unsigned long i, BIT_ARRAY * code, unsi
     return getTreeRank(next, i, code, current_level + 1); 
 }
 
-uint8_t decodeHuffmanCode(BIT_ARRAY * bits){
+uint8_t decodeHuffmanCode(int id, BIT_ARRAY * bits){
     for(int i = 0 ; i < ALPHABETSIZE ; i++){
         char success = 1;
-        BIT_ARRAY * code = PAPFS_DATA->huffCodes[i];
+        BIT_ARRAY * code = PAPFS_DATA->metadata[id].huffCodes[i];
         if(code == NULL || barlen(bits) != barlen(code)){
             continue;
         }
@@ -146,9 +160,9 @@ uint8_t decodeHuffmanCode(BIT_ARRAY * bits){
 }
 
 //TODO: fd resolving
-int random_access_read_symbol(int fd, unsigned long i) {
+int random_access_read_symbol(int id, unsigned long i) {
     BIT_ARRAY * symCode = barcreate(ALPHABETSIZE);
-    int len = getHuffmanCode(PAPFS_DATA->wavelet_root, i, symCode, 1);
+    int len = getHuffmanCode(PAPFS_DATA->metadata[id].wavelet_root, i, symCode, 1);
     if (len == -1) {
         bardestroy(symCode);
         return -1;
@@ -159,7 +173,7 @@ int random_access_read_symbol(int fd, unsigned long i) {
     bit_array_to_str(symCode, str);
     //log_print("Found code: %s\n", symCode);
 
-    uint8_t sym = decodeHuffmanCode(symCode);
+    uint8_t sym = decodeHuffmanCode(id, symCode);
     bardestroy(symCode);
     return sym;
 }

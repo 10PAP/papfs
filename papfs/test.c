@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include "CUnit/Basic.h"
 #include "compressor.h"
@@ -68,16 +69,17 @@ int init_suite1(void)
    strcpy(PAPFS_DATA->rootdir, "./");
    printf("root = %s\n", PAPFS_DATA->rootdir);
    
+   PAPFS_DATA->opened_N = 1;
   
    for(int i = 0 ; i < ALPHABETSIZE ; i++){
-      PAPFS_DATA->huffCodes[i] = 0;
+      PAPFS_DATA->metadata[0].huffCodes[i] = 0;
    }
-   PAPFS_DATA->huffCodes['a'] = barcreate(2);
-   PAPFS_DATA->huffCodes['b'] = barcreate(2);
-   PAPFS_DATA->huffCodes['c'] = barcreate(2);
-   bit_array_from_str(PAPFS_DATA->huffCodes['a'], "10");
-   bit_array_from_str(PAPFS_DATA->huffCodes['b'], "01");
-   bit_array_from_str(PAPFS_DATA->huffCodes['c'], "00");
+   PAPFS_DATA->metadata[0].huffCodes['a'] = barcreate(2);
+   PAPFS_DATA->metadata[0].huffCodes['b'] = barcreate(2);
+   PAPFS_DATA->metadata[0].huffCodes['c'] = barcreate(2);
+   bit_array_from_str(PAPFS_DATA->metadata[0].huffCodes['a'], "10");
+   bit_array_from_str(PAPFS_DATA->metadata[0].huffCodes['b'], "01");
+   bit_array_from_str(PAPFS_DATA->metadata[0].huffCodes['c'], "00");
    
    return 0;
 }
@@ -112,8 +114,8 @@ int clean_suite1(void)
    bardestroy(code);
    free_tree(root);
    for(int i = 0 ; i < ALPHABETSIZE ; i++){
-      if(PAPFS_DATA->huffCodes[i])
-         bardestroy(PAPFS_DATA->huffCodes[i]);
+      if(PAPFS_DATA->metadata[0].huffCodes[i])
+         bardestroy(PAPFS_DATA->metadata[0].huffCodes[i]);
    }
    return 0;
 }
@@ -159,11 +161,11 @@ void testDecodeHuffmanCode(void)
 {
    BIT_ARRAY* code = barcreate(2);
    bit_array_from_str(code, "10");
-   CU_ASSERT(decodeHuffmanCode(code) == 'a');
+   CU_ASSERT(decodeHuffmanCode(0, code) == 'a');
    bit_array_from_str(code, "01");
-   CU_ASSERT(decodeHuffmanCode(code) == 'b');
+   CU_ASSERT(decodeHuffmanCode(0, code) == 'b');
    bit_array_from_str(code, "00");
-   CU_ASSERT(decodeHuffmanCode(code) == 'c');
+   CU_ASSERT(decodeHuffmanCode(0, code) == 'c');
    bardestroy(code);
 }
 

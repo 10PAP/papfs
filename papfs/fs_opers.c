@@ -1,6 +1,7 @@
 #include "params.h"
 #include "log.h"
 
+#include <stdlib.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -10,6 +11,14 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+
+int fd_to_id(int fd) {
+    for (int i = 0; i < PAPFS_DATA->opened_N; i++) {
+        if (PAPFS_DATA->fd_table[i] == fd)
+            return i;
+    }
+    exit(1);
+}
 
 // In some calls we need to get full path of file/directory
 // We store root path (path to mount point) in our private data
@@ -137,6 +146,16 @@ int PAPFS_statfs(const char *path, struct statvfs *statv) {
 int PAPFS_release(const char *path, struct fuse_file_info *fi) {
     int retstat;
     log_print("\nPAPFS_release(path=\"%s\", fi=0x%08x)\n", path, fi);
+
+    // clear metadata
+    int id = fd_to_id(fi->fh);
+    if (id == PAPFS_DATA->opened_N-1) {
+        PAPFS_DATA->fd_table[id] = -1;
+        PAPFS_DATA->opened_N--;
+    } else {
+        PAPFS_DATA->fd_table[id] = -1;
+    }
+
     retstat = close(fi->fh);
     return retstat;
 }

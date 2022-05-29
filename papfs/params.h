@@ -11,21 +11,29 @@
 
 #define ALPHABETSIZE (256)
 
+#define MAX_N_OF_FILES 1024
+
 typedef struct WaveletNode {
     BIT_ARRAY * bitmap;
     struct WaveletNode * left;
     struct WaveletNode * right;
 } WaveletNode;
 
-//TODO: list of huffcodes and wavelet roots
-// because we want to open several files simultaneously :)
+typedef struct File_Metadata {
+    BIT_ARRAY * huffCodes[ALPHABETSIZE];
+    WaveletNode * wavelet_root;
+} File_Metadata;
+
 struct fs_state {
     FILE *logfile;
     char *rootdir;
     // and some data for compressor
-    BIT_ARRAY * huffCodes[ALPHABETSIZE];
-    WaveletNode * wavelet_root;
+    File_Metadata metadata[MAX_N_OF_FILES];
+    int fd_table[MAX_N_OF_FILES];
+    int opened_N;
 };
+
+int fd_to_id(int fd);
 
 #ifndef TEST
 #define PAPFS_DATA ((struct fs_state *) fuse_get_context()->private_data)
