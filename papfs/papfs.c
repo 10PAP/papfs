@@ -92,10 +92,16 @@ int PAPFS_write(const char *path, const char *buf, size_t size, off_t offset, st
 
     // TODO: RANDOM ACCESS WRITE OPERATION
 
+    int file_id = fd_to_id(fi->fh);
 
-    retstat = pwrite(fi->fh, buf, size, offset);
-    if (retstat < 0){
-	    retstat = log_error("PAPFS_write pwrite");
+    if(PAPFS_DATA->metadata[file_id].type_flag == 1){
+      retstat = pwrite(fi->fh, buf, size, offset);
+      if (retstat < 0){
+        retstat = log_error("PAPFS_write pwrite");
+      }
+    }
+    else {
+        retstat = log_error("PAPFS_write pwrite: trying to write compressed file");
     }
     
     return (int) retstat;
