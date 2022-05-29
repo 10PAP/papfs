@@ -164,13 +164,16 @@ int PAPFS_release(const char *path, struct fuse_file_info *fi) {
     // if file is not compressed already, we'll check if it's appropriate
     if(PAPFS_DATA->metadata[id].type_flag == 0){
         off_t sz = lseek(fi->fh, 0L, SEEK_END) - 1;
-
-        unsigned char* buffer = malloc(sz);
-        pread(fi->fh, buffer, sz, 1);
-        lseek(fi->fh, 0L, SEEK_SET);
-        //close(fi->fh);
-        //fi->fh = open(path, O_RDWR | O_TRUNC);
+        
         if(sz > 10){
+            unsigned char* buffer = malloc(sz);
+            pread(fi->fh, buffer, sz, 1);
+            lseek(fi->fh, 0L, SEEK_SET);
+            close(fi->fh);
+            char fpath[PATH_MAX];
+            getFullPath(fpath, path);
+            log_print("\nPAPFS_compress(fpath=%s)\n", fpath);
+            fi->fh = open(fpath, O_RDWR | O_TRUNC);
             compress(buffer, sz, fi->fh);
         }
     }
