@@ -36,7 +36,9 @@ int PAPFS_open(const char *path, struct fuse_file_info *fi) {
     getFullPath(fpath, path);
 
     // open file
-    fd = open(fpath, fi->flags);
+    
+    // TODO : normal flags handling
+    fd = open(fpath, O_RDWR);
     if (fd < 0)
         retstat = log_error("PAPFS_open open");
     fi->fh = fd;
@@ -49,12 +51,14 @@ int PAPFS_open(const char *path, struct fuse_file_info *fi) {
 
     if (type_flag) {
         // 1) compressed file
+        log_print("This is compressed file\n");
 
         // get metadata from file
         load_metadata(fd);
     } else {
         // 2) plain file
-        
+        log_print("This is plain file\n");
+
         update_fdtable(fd, 0);
     }
 
