@@ -42,3 +42,7 @@ https://docs.google.com/presentation/d/1h6SCdK_gEW3Fv4t8oNDkIDxI9F7dTqPpFmlhkLNP
 ## About metadata redundancy
 
 https://denisenes68.notion.site/19fe834992cc4e89a4bc46ef4efe0321
+
+## Final presentation
+
+https://docs.google.com/presentation/d/1inH0a2uSLa_QbFs51oLBjz6JHZAyeDX_aq4FjVK5wps/edit?usp=sharing
